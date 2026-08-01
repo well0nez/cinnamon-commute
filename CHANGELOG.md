@@ -3,6 +3,31 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-08-02
+
+### Fixed
+
+- The applet now finds long-distance trains and S-Bahn trains on the IRIS
+  board. It read the train number from the brackets in the MOTIS line name,
+  for example `RB48 (17381)`. An ICE has no brackets, because its number is
+  its name, and an S-Bahn sends no number at all. Both groups therefore got
+  no platform and no delay from IRIS. The applet now also matches on the
+  scheduled departure time together with the line name.
+
+  The effect is large. On the route Köln Hbf to Düsseldorf Hbf the platform
+  count went from five of eight connections to eight of eight. One ICE showed
+  two minutes early from the open feed, while IRIS reported a delay of 19
+  minutes with two reasons.
+
+- The geocoder returned the wrong station for a name that ends in `Hbf`. A
+  general preference for the DELFI feed overruled the relevance order of the
+  service, so `Köln Hbf` became `Stolberg, Hauptbahnhof (Bus)`. The feed now
+  decides only between stations with the same name.
+
+- The short name in the panel took the last word of the station name. `Köln
+  Hbf` became `Hbf`. The applet now removes the brackets and the station
+  suffix first, and it keeps the word that names the place.
+
 ## [1.0.0] - 2026-08-02
 
 The first release.

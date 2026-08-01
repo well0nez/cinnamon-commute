@@ -162,11 +162,10 @@ def fetch_board(name):
 
     board = {}
     for dep in got.get("departures", []):
-        num = (dep.get("trainNumber") or "").strip()
         sched = dep.get("scheduledDeparture")
-        if not num or not sched:
+        if not sched:
             continue
-        board[num] = {
+        entry = {
             "delay": dep.get("delayDeparture") or 0,
             "platform": dep.get("platform"),
             "scheduled_platform": dep.get("scheduledPlatform"),
@@ -178,6 +177,14 @@ def fetch_board(name):
             ],
             "scheduled": sched,
         }
+        # Zwei Schluessel je Fahrt, damit auch Zuege ohne uebermittelte Nummer
+        # gefunden werden.
+        num = (dep.get("trainNumber") or "").strip()
+        if num:
+            board["num:" + num] = entry
+        line = line_name(dep.get("train"))
+        if line:
+            board["line:" + sched + "|" + line] = entry
 
     cache[name] = {"at": time.time(), "board": board}
     save_cache(BOARD_CACHE, cache)
@@ -230,11 +237,48 @@ def iris_board(motis_name, user_input, wanted_nums):
 
 
 def train_number(leg):
-    """MOTIS haengt die Zugnummer als 'RB48 (17381)' an den Liniennamen."""
+    """MOTIS haengt die Zugnummer als 'RB48 (17381)' an den Liniennamen.
+
+    Nur bei Regionalzuegen. Ein ICE heisst schlicht 'ICE 22', eine S-Bahn 'S6'
+    -- da steht keine Nummer in Klammern, und frueher fiel damit der gesamte
+    Fern- und S-Bahn-Verkehr aus der IRIS-Anreicherung.
+    """
     raw = leg.get("routeShortName") or ""
     if "(" in raw and ")" in raw:
         return raw[raw.rfind("(") + 1 : raw.rfind(")")].strip()
     return ""
+
+
+def line_name(raw):
+    """Liniennamen von MOTIS und IRIS auf eine vergleichbare Form bringen.
+
+    IRIS stellt die Gattung voran ('S S6', 'NX RB48', 'RE RE5'), MOTIS nicht.
+    Beim ICE ist die Nummer selbst der Name, dort bleibt alles stehen.
+    """
+    raw = (raw or "").split("(")[0].strip()
+    parts = raw.split()
+    if not parts:
+        return ""
+    if len(parts) > 1 and not parts[-1].isdigit():
+        return parts[-1]
+    return " ".join(parts)
+
+
+def board_keys(leg, dep_sched):
+    """Schluessel, unter denen eine Fahrt im IRIS-Board stehen kann.
+
+    Die Nummer ist der genauere Weg. Fehlt sie, bleibt die Kombination aus
+    planmaessiger Abfahrtszeit und Linienname -- die ist am selben Bahnhof
+    ebenso eindeutig.
+    """
+    keys = []
+    num = train_number(leg)
+    if num:
+        keys.append("num:" + num)
+    if dep_sched:
+        keys.append("line:" + dep_sched.strftime("%H:%M") + "|" +
+                    line_name(leg.get("routeShortName")))
+    return keys
 
 
 def first_transit_leg(itin):
@@ -270,7 +314,11 @@ def build_connection(itin, iris):
     platform = ""
     track_changed = False
 
-    hit = iris.get(train_number(first))
+    hit = None
+    for key in board_keys(first, dep_sched):
+        if key in iris:
+            hit = iris[key]
+            break
     if hit and dep_sched and hit.get("scheduled") == dep_sched.strftime("%H:%M"):
         dep_delay = hit["delay"]
         if hit.get("platform"):
@@ -344,8 +392,9 @@ def main():
     wanted = set()
     for itin in plan.get("itineraries", []):
         leg = first_transit_leg(itin)
-        if leg:
-            wanted.add(train_number(leg))
+        if not leg:
+            continue
+        wanted.update(board_keys(leg, to_local(leg["from"].get("scheduledDeparture"))))
     wanted.discard("")
 
     iris = iris_board(from_name, src, wanted)
