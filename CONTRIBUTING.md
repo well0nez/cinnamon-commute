@@ -2,12 +2,20 @@
 
 ## Languages in this project
 
-The documentation is English, and it follows ASD-STE100 Simplified Technical
-English. Write in the active voice, use the present tense, and keep a
-descriptive sentence below 25 words. A procedural sentence stays below 20
-words and gives one instruction. Short sentences are not a goal in themselves;
-a sentence that carries no information is not an improvement over a longer one
-that does.
+The documentation is English, and it follows the writing rules of ASD-STE100
+Simplified Technical English. Write in the active voice, use the present
+tense, and keep a descriptive sentence below 25 words. A procedural sentence
+stays below 20 words and gives one instruction. Short sentences are not a goal
+in themselves; a sentence that carries no information is not an improvement
+over a longer one that does.
+
+The approved dictionary of ASD-STE100 is Part 2 of the specification, and this
+project does not apply it. That dictionary comes from aircraft maintenance
+manuals, where every word has one narrow meaning. Some of its substitutions
+are wrong here: it replaces "delay" with "interval", which is a waiting time
+and not the lateness of a train. Domain words such as station, platform, feed
+and applet therefore stay as they are. Rule 1.6 of the specification permits
+this, because they are technical nouns.
 
 The user interface is German, because the applet serves German railway data.
 The code comments are German as well. Keep this split: if you add a string that
