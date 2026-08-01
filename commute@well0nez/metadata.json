@@ -1,0 +1,10 @@
+{
+    "uuid": "commute@well0nez",
+    "name": "Commute",
+    "description": "Nächste Zugverbindungen zwischen zwei Bahnhöfen, mit Verspätung, Gleis und Umstiegen. Richtung per Klick umschaltbar, Anzeige rollierend ab jetzt.",
+    "icon": "cs-desktop",
+    "max-instances": 3,
+    "version": "1.0.0",
+    "author": "well0nez",
+    "website": "https://github.com/well0nez/cinnamon-commute"
+}

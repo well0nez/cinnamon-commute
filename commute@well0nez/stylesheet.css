@@ -1,0 +1,82 @@
+/* Bewusst zurueckhaltend: das Menue soll aussehen wie der Rest des
+   Cinnamon-Themes, nicht wie ein fremdes Widget. Farbe nur dort, wo sie
+   eine Information traegt -- Verspaetung, Gleiswechsel, Ausfall. */
+
+.db-header {
+    font-weight: bold;
+    padding: 2px 0;
+}
+
+.db-status {
+    font-size: 0.8em;
+    opacity: 0.6;
+    padding-top: 4px;
+}
+
+.db-colhead {
+    font-size: 0.8em;
+    opacity: 0.55;
+    padding-bottom: 2px;
+}
+
+.db-row {
+    padding: 3px 0;
+}
+
+.db-row-top {
+    spacing: 8px;
+}
+
+/* Bewusst KEINE Breiten hier. Die Spaltenbreiten misst applet.js zur Laufzeit
+   aus den echten Texten und setzt sie auf allen Zeilen gleich -- feste px
+   haengen an Schriftart und -groesse, und Cinnamon laedt Applet-Stylesheets
+   beim Reload nicht zuverlaessig neu. Hier steht nur, wie es aussieht. */
+.db-time {
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.db-delay {
+    font-family: monospace;
+}
+
+.db-delay-none  { color: transparent; }
+.db-delay-mild  { color: #d3a04a; }
+.db-delay-bad   { color: #d05c5c; font-weight: bold; }
+
+/* Etwas Luft rechts, sonst klebt bei "RE4+S1+RB48" die Ankunftszeit am Text.
+   Wird mitgemessen, weil die Spaltenbreite aus der Klasse ermittelt wird. */
+.db-line {
+    padding-right: 8px;
+}
+
+.db-arrive {
+    font-family: monospace;
+    opacity: 0.85;
+}
+
+.db-arrive-delay {
+    font-family: monospace;
+}
+
+.db-cancelled {
+    text-decoration: line-through;
+    color: #d05c5c;
+}
+
+.db-sub {
+    font-size: 0.85em;
+    opacity: 0.65;
+    padding-left: 2px;
+}
+
+.db-sub-warn {
+    opacity: 1;
+    color: #d3a04a;
+}
+
+.db-alert {
+    font-size: 0.85em;
+    color: #d05c5c;
+    padding-left: 2px;
+}

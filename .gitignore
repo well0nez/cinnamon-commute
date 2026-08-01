@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+
+# Local scratch files, never part of the applet
+/tmp/
+*.log

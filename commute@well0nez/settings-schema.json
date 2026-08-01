@@ -1,0 +1,73 @@
+{
+    "head-route": {
+        "type": "header",
+        "description": "Strecke"
+    },
+    "station-a": {
+        "type": "entry",
+        "default": "Köln Hbf",
+        "description": "Bahnhof A",
+        "tooltip": "Name wie im Fahrplan, z. B. \"Köln Hbf\" oder \"Solingen-Ohligs\". Wird einmalig aufgelöst und gecacht."
+    },
+    "station-b": {
+        "type": "entry",
+        "default": "Düsseldorf Hbf",
+        "description": "Bahnhof B",
+        "tooltip": "Gegenrichtung. Umschalten geht im Menü per Klick, hier nichts ändern nötig."
+    },
+    "reversed": {
+        "type": "checkbox",
+        "default": false,
+        "description": "Aktuell B → A fahren",
+        "tooltip": "Wird vom Menü-Eintrag \"Richtung wechseln\" gesetzt."
+    },
+    "head-display": {
+        "type": "header",
+        "description": "Anzeige"
+    },
+    "count": {
+        "type": "spinbutton",
+        "default": 5,
+        "min": 2,
+        "max": 10,
+        "step": 1,
+        "units": "Verbindungen",
+        "description": "Verbindungen im Menü"
+    },
+    "panel-mode": {
+        "type": "combobox",
+        "default": "dest",
+        "description": "Panel-Text",
+        "tooltip": "Die Uhrzeit ist immer die Abfahrt am Startbahnhof, nie die Ankunft.",
+        "options": {
+            "ab Bahnhof 00:15": "dest",
+            "Linie ab 00:15": "line",
+            "ab 00:15": "time",
+            "ab 00:15 · in 12 min": "countdown"
+        }
+    },
+    "warn-minutes": {
+        "type": "spinbutton",
+        "default": 5,
+        "min": 1,
+        "max": 60,
+        "step": 1,
+        "units": "Minuten",
+        "description": "Verspätung ab dieser Höhe rot",
+        "tooltip": "Darunter wird die Verspätung dezent gelb statt rot dargestellt."
+    },
+    "head-refresh": {
+        "type": "header",
+        "description": "Aktualisierung"
+    },
+    "refresh": {
+        "type": "spinbutton",
+        "default": 60,
+        "min": 60,
+        "max": 600,
+        "step": 15,
+        "units": "Sekunden",
+        "description": "Abfrageintervall",
+        "tooltip": "Nicht unter 60 s: db-infoscreen erlaubt ausdrücklich nur eine Anfrage pro Station und Minute, und Transitous wird ehrenamtlich betrieben. Häufiger bringt auch nichts – die Backend-Daten haben keine feinere Auflösung."
+    }
+}
