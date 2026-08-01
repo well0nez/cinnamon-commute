@@ -18,10 +18,9 @@ warning sign.
 The menu shows the next connections in a table. Each row gives the scheduled
 departure, the real departure, the line, the scheduled arrival and the real
 arrival. A real time appears only when the train is late, and it is red. The
-column header names the station above both of its times. The second line of each row
-gives the platform, the travel time, the number of transfers, and the time
-until departure. The column headers name the station that each time belongs to,
-so you cannot confuse a departure with an arrival.
+column header names the station above both of its times, so you cannot confuse
+a departure with an arrival. The second line of each row gives the platform,
+the travel time, the number of transfers, and the time until departure.
 
 The list is not tied to a fixed hour. Trains that have left drop out of the
 list every 20 seconds, without a new request to the servers.
