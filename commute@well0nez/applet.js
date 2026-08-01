@@ -35,12 +35,6 @@ function pad(n) {
     return (n < 10 ? "0" : "") + n;
 }
 
-// Leer bei Puenktlichkeit. Die Spaltenbreite wird nicht hierueber gehalten,
-// sondern in _renderMenu fuer "+99" reserviert -- Pango trimmt reinen
-// Whitespace beim Messen weg, Auffuellen mit Leerzeichen bringt also nichts.
-function delayText(minutes) {
-    return minutes > 0 ? "+" + minutes : "";
-}
 
 class DbPendler extends Applet.TextIconApplet {
 
@@ -235,13 +229,21 @@ class DbPendler extends Applet.TextIconApplet {
         // Im Tooltip steht an jeder Zeit der Bahnhof, zu dem sie gehoert --
         // sonst bleibt dieselbe Verwechslung wie vorher im Panel.
         let tip = c.lines.join(" + ") + "\n" +
-            "ab " + c.dep + (c.dep_delay ? " (+" + c.dep_delay + ")" : "") +
+            "ab " + (c.dep_delay > 0
+                ? c.dep_real + " statt " + c.dep + " (+" + c.dep_delay + ")"
+                : c.dep) +
             "  " + this._data.from_name +
             (c.platform ? ", Gleis " + c.platform : "") + "\n" +
-            "an " + c.arr + (c.arr_delay ? " (+" + c.arr_delay + ")" : "") +
+            "an " + (c.arr_delay > 0
+                ? (c.arr_estimated ? "ca. " : "") + c.arr_real +
+                  " statt " + c.arr + " (+" + c.arr_delay + ")"
+                : c.arr) +
             "  " + this._data.to_name + "\n" +
             c.duration + " min" +
             (c.transfers ? ", " + c.transfers + "× umsteigen" : ", direkt");
+        if (c.arr_estimated) {
+            tip += "\nAnkunft aus der Abfahrtsverspätung gerechnet";
+        }
         if (c.cancelled) tip += "\nFÄLLT AUS";
         this.set_applet_tooltip(tip);
     }
@@ -322,11 +324,7 @@ class DbPendler extends Applet.TextIconApplet {
         // allen Zeilen gleich setzen. Feste px im Stylesheet haengen an
         // Schriftart und -groesse und liefen bei "RE4+S1+RB48" ohnehin aus
         // der Flucht.
-        // Spaltenueberschrift, damit ohne Raten klar ist, welche Zeit zu
-        // welchem Bahnhof gehoert. Sie laeuft durch dieselbe Breitenmessung
-        // wie die Datenzeilen, sonst steht sie versetzt.
-        let rows = list.length ? [this._buildHeaderRow()] : [];
-        rows = rows.concat(list.map((c) => this._buildRow(c)));
+        let rows = list.map((c) => this._buildRow(c));
         for (let r of rows) this._rowSection.addMenuItem(r.item);
 
         // Die beiden Verspaetungsspalten werden fuer "+99" vermessen, nicht
@@ -334,9 +332,11 @@ class DbPendler extends Applet.TextIconApplet {
         // schmal, und das ganze Raster rutscht, sobald irgendwo ein "+3"
         // erscheint. Gemessen wird an den bereits eingehaengten Labels, damit
         // Theme und Schrift wirklich anliegen.
-        const RESERVED = [1, 4];
-        let saved = rows.map((r) => RESERVED.map((i) => r.cells[i].get_text()));
-        rows.forEach((r) => RESERVED.forEach((i) => r.cells[i].set_text("+99")));
+        const RESERVED = { 1: "00:00", 4: "≈00:00" };
+        let saved = rows.map((r) =>
+            Object.keys(RESERVED).map((i) => r.cells[i].get_text()));
+        rows.forEach((r) =>
+            Object.keys(RESERVED).forEach((i) => r.cells[i].set_text(RESERVED[i])));
 
         let widths = [];
         for (let r of rows) {
@@ -346,9 +346,15 @@ class DbPendler extends Applet.TextIconApplet {
             });
         }
 
-        rows.forEach((r, n) => RESERVED.forEach((i, k) => r.cells[i].set_text(saved[n][k])));
+        rows.forEach((r, n) =>
+            Object.keys(RESERVED).forEach((i, k) => r.cells[i].set_text(saved[n][k])));
         for (let r of rows) {
             r.cells.forEach((cell, i) => cell.set_width(widths[i]));
+        }
+
+        // Erst jetzt, mit den fertigen Breiten, und vorn eingehaengt.
+        if (rows.length) {
+            this._rowSection.addMenuItem(this._buildHeaderRow(widths), 0);
         }
 
         let d = new Date(this._lastFetch * 1000);
@@ -362,23 +368,32 @@ class DbPendler extends Applet.TextIconApplet {
             "db-status"));
     }
 
-    // Ueberschriftszeile mit derselben Zellenstruktur wie eine Datenzeile --
-    // nur so greift die gemeinsame Spaltenvermessung.
-    _buildHeaderRow() {
+    // Die Ueberschrift laeuft NICHT durch die Spaltenvermessung mit. Sonst
+    // blaeht "an Duesseldorf" die Ankunftsspalte auf, und zwischen Soll- und
+    // Ist-Zeit steht eine Luecke von der halben Menuebreite. Stattdessen
+    // bekommt sie die schon berechneten Breiten und fasst je zwei Spalten
+    // zusammen: eine Beschriftung ueber Soll und Ist, denn beide gehoeren
+    // zum selben Bahnhof.
+    _buildHeaderRow(widths) {
+        const SPACING = 8;   // entspricht .db-row-top im Stylesheet
+        let pair = (a, b) => widths[a] + SPACING + widths[b];
         let short = (n) => shortName(n);
-        let texts = [
-            "ab " + (this._data ? short(this._data.from_name) : ""),
-            "",
-            "Linie",
-            "an " + (this._data ? short(this._data.to_name) : ""),
-            ""
+
+        let spans = [
+            ["ab " + (this._data ? short(this._data.from_name) : ""), pair(0, 1)],
+            ["Linie", widths[2]],
+            ["an " + (this._data ? short(this._data.to_name) : ""), pair(3, 4)]
         ];
+
         let item = new PopupMenu.PopupBaseMenuItem({ reactive: false });
         let top = new St.BoxLayout({ style_class: "db-row-top" });
-        let cells = texts.map((t) => new St.Label({ text: t, style_class: "db-colhead" }));
-        for (let cell of cells) top.add_child(cell);
+        for (let [text, w] of spans) {
+            let label = new St.Label({ text: text, style_class: "db-colhead" });
+            label.set_width(w);
+            top.add_child(label);
+        }
         item.addActor(top, { span: -1 });
-        return { item: item, cells: cells };
+        return item;
     }
 
     _buildRow(c) {
@@ -395,8 +410,12 @@ class DbPendler extends Applet.TextIconApplet {
                 text: c.dep,
                 style_class: c.cancelled ? "db-time db-cancelled" : "db-time"
             }),
+            // Statt "+19" die Zeit, zu der es wirklich losgeht. Die Farbe
+            // traegt die Dringlichkeit, die Planzeit steht links daneben --
+            // das ist die Schreibweise der Bahnsteiganzeigen, und es erspart
+            // das Kopfrechnen.
             new St.Label({
-                text: delayText(c.dep_delay),
+                text: c.dep_delay > 0 ? c.dep_real : "",
                 style_class: "db-delay " + this._delayStyle(c.dep_delay)
             }),
             // Bei drei Abschnitten wird der Trenner knapper -- "RE4+S1+RB48"
@@ -406,8 +425,12 @@ class DbPendler extends Applet.TextIconApplet {
                 style_class: "db-line"
             }),
             new St.Label({ text: c.arr, style_class: "db-arrive" }),
+            // "≈" nur, wenn die Ankunft aus der Abfahrtsverspaetung
+            // hochgerechnet ist statt gemeldet.
             new St.Label({
-                text: delayText(c.arr_delay),
+                text: c.arr_delay > 0
+                    ? (c.arr_estimated ? "≈" : "") + c.arr_real
+                    : "",
                 style_class: "db-arrive-delay " + this._delayStyle(c.arr_delay)
             })
         ];

@@ -15,8 +15,10 @@ the train. A delay of one minute or more appears after the time. Small delays
 are amber, and delays above your threshold are red. A cancelled train gets a
 warning sign.
 
-The menu shows the next connections in a table. Each row gives the departure
-time, the delay, the line, and the arrival time. The second line of each row
+The menu shows the next connections in a table. Each row gives the scheduled
+departure, the real departure, the line, the scheduled arrival and the real
+arrival. A real time appears only when the train is late, and it is red. The
+column header names the station above both of its times. The second line of each row
 gives the platform, the travel time, the number of transfers, and the time
 until departure. The column headers name the station that each time belongs to,
 so you cannot confuse a departure with an arrival.
@@ -36,6 +38,12 @@ open GTFS and GTFS-RT feeds. For Germany these feeds come from DELFI.
 IRIS, which is the internal system of Deutsche Bahn. The delays there are more
 accurate and arrive earlier than the delays in the open feeds. The platform
 numbers are the numbers that you see at the station.
+
+An arrival cannot be punctual when the departure is late and the journey is
+too short to recover the delay. The departure delay comes from IRIS, and the
+arrival prognosis comes from MOTIS, so the two can disagree. The applet
+replaces the arrival only when the recovery is impossible, and it marks such a
+value with the prefix `≈`.
 
 The applet keeps the platform number from db-infoscreen only. MOTIS gives
 internal DELFI codes at some stations, for example `77` at Leverkusen Opladen.

@@ -3,6 +3,30 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-08-02
+
+### Added
+
+- The menu now shows the real time next to the scheduled time. A delayed
+  train gives two times, and the second one is red. Before this the applet
+  showed `00:35 +19`, and the reader had to do the addition. The column
+  header names the station once and covers both times, so the table needs no
+  extra column.
+
+### Fixed
+
+- An arrival can no longer be on time when the departure is late and the
+  journey is too short to recover the delay. The departure delay comes from
+  IRIS, but the arrival prognosis comes from MOTIS, and the two contradicted
+  each other. One ICE left 19 minutes late on a 21-minute run and still
+  claimed a punctual arrival.
+
+  A train can recover time, because the timetable holds a buffer. The applet
+  therefore replaces the arrival only when the recovery is not possible: more
+  than 20 percent of the journey time, and at least two minutes. A calculated
+  arrival gets the prefix `≈`, and the tooltip says where the value comes
+  from.
+
 ## [1.0.1] - 2026-08-02
 
 ### Fixed

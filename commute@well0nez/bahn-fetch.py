@@ -16,7 +16,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo("Europe/Berlin")
@@ -110,6 +110,13 @@ def to_local(iso):
 
 def hhmm(dt):
     return dt.strftime("%H:%M") if dt else "--:--"
+
+
+def shift(dt, minutes):
+    """Planzeit plus Verspaetung -- die Zeit, zu der es wirklich losgeht."""
+    if not dt:
+        return None
+    return dt + timedelta(minutes=minutes)
 
 
 def delay_min(real, sched):
@@ -330,13 +337,31 @@ def build_connection(itin, iris):
         cancelled = cancelled or hit["cancelled"]
         messages = hit["messages"]
 
+    duration = int(itin.get("duration", 0) // 60)
+    arr_delay = delay_min(arr_real, arr_sched)
+
+    # Die Abfahrtsverspaetung kommt aus IRIS, die Ankunftsprognose aber von
+    # MOTIS -- die beiden koennen sich widersprechen. Ein Zug DARF Verspaetung
+    # aufholen, dafuer steckt Puffer im Fahrplan. Er kann aber nicht 19 Minuten
+    # auf einer 21-Minuten-Fahrt aufholen. Nur solche unmoeglichen Faelle
+    # werden ersetzt; alles im Rahmen des Aufholbaren bleibt stehen.
+    arr_estimated = False
+    if dep_delay > 0 and arr_delay < dep_delay:
+        recoverable = max(2.0, 0.2 * duration)
+        if (dep_delay - arr_delay) > recoverable:
+            arr_delay = dep_delay
+            arr_estimated = True
+
     return {
         "dep": hhmm(dep_sched),
         "arr": hhmm(arr_sched),
+        "dep_real": hhmm(shift(dep_sched, dep_delay)),
+        "arr_real": hhmm(shift(arr_sched, arr_delay)),
+        "arr_estimated": arr_estimated,
         "dep_ts": int(dep_sched.timestamp()) if dep_sched else 0,
         "dep_delay": dep_delay,
-        "arr_delay": delay_min(arr_real, arr_sched),
-        "duration": int(itin.get("duration", 0) // 60),
+        "arr_delay": arr_delay,
+        "duration": duration,
         "transfers": itin.get("transfers", 0),
         "lines": lines,
         "platform": platform or "",
