@@ -42,12 +42,12 @@ class DbPendler extends Applet.TextIconApplet {
         super(orientation, panelHeight, instanceId);
 
         this.setAllowedLayout(Applet.AllowedLayout.BOTH);
-        this.set_applet_icon_symbolic_name("network-transmit-receive");
-        this.hide_applet_icon();
 
-        // Pfad aus den Metadaten statt fest verdrahtet: so laeuft das Applet
+        // Pfade aus den Metadaten statt fest verdrahtet: so laeuft das Applet
         // auch aus einem Git-Checkout heraus, der per Symlink eingebunden ist.
         this._helper = GLib.build_filenamev([metadata.path, "bahn-fetch.py"]);
+        this._icon = GLib.build_filenamev(
+            [metadata.path, "icons", "commute-train-symbolic.svg"]);
 
         this._data = null;
         this._error = null;
@@ -57,7 +57,7 @@ class DbPendler extends Applet.TextIconApplet {
 
         this.settings = new Settings.AppletSettings(this, UUID, instanceId);
         for (let key of ["station-a", "station-b", "reversed", "count",
-                         "panel-mode", "warn-minutes", "refresh"]) {
+                         "panel-mode", "warn-minutes", "refresh", "compact"]) {
             this.settings.bind(key, key.replace(/-/g, "_"), () => this._onSettingsChanged());
         }
 
@@ -81,6 +81,16 @@ class DbPendler extends Applet.TextIconApplet {
         // Bewusst kein Neuladen beim Oeffnen -- der Tick haelt die Daten
         // frisch, und jeder Klick eine Abfrage waere unnoetiger Traffic.
         this.menu.toggle();
+    }
+
+    // Mittelklick schaltet zwischen Text und Symbol um. Links ist das Menue
+    // belegt, rechts das Kontextmenue -- die Mitte ist frei und wird kaum
+    // versehentlich getroffen.
+    on_applet_middle_clicked(event) {
+        this.compact = !this.compact;
+        this.settings.setValue("compact", this.compact);
+        this._renderPanel();
+        return true;
     }
 
     on_applet_removed_from_panel() {
@@ -167,21 +177,34 @@ class DbPendler extends Applet.TextIconApplet {
         if (this.menu.isOpen) this._renderMenu();
     }
 
+    // Beide Darstellungen bekommen dieselbe Farbe und denselben Tooltip.
+    // Im Symbolmodus faerbt sich das Icon statt der Schrift -- sonst waere
+    // die Verspaetung genau das, was beim Zusammenklappen verlorenginge.
+    _applyPanel(text, style, tip) {
+        if (this.compact) {
+            this.hide_applet_label(true);
+            this.set_applet_icon_symbolic_path(this._icon);
+            if (this._applet_icon) this._applet_icon.set_style(style);
+        } else {
+            this.hide_applet_icon();
+            this.hide_applet_label(false);
+            this.set_applet_label(text);
+            this._applet_label.set_style(style);
+        }
+        this.set_applet_tooltip(tip);
+    }
+
     _renderPanel() {
         let list = this._upcoming();
 
         if (this._error && !this._data) {
-            this.set_applet_label("Bahn ⚠");
-            this._applet_label.set_style("color: #e08a5b;");
-            this.set_applet_tooltip("Fehler: " + this._error);
+            this._applyPanel("Bahn ⚠", "color: #e08a5b;",
+                             "Fehler: " + this._error);
             return;
         }
         if (!list.length) {
-            this.set_applet_label("Bahn –");
-            this._applet_label.set_style(null);
-            this.set_applet_tooltip(this._data
-                ? "Keine weiteren Verbindungen"
-                : "Lade …");
+            this._applyPanel("Bahn –", null,
+                this._data ? "Keine weiteren Verbindungen" : "Lade …");
             return;
         }
 
@@ -210,21 +233,16 @@ class DbPendler extends Applet.TextIconApplet {
                 text = "ab " + shortName(this._data.from_name) + " " + time;
         }
 
+        let style = null;
         if (c.cancelled) {
             text += " ⚠";
-            this._applet_label.set_style("color: #d05c5c; font-weight: bold;");
+            style = "color: #d05c5c; font-weight: bold;";
         } else if (c.dep_delay > 0) {
             text += " +" + c.dep_delay;
-            this._applet_label.set_style(
-                c.dep_delay >= this.warn_minutes
-                    ? "color: #d05c5c; font-weight: bold;"
-                    : "color: #d3a04a;"
-            );
-        } else {
-            this._applet_label.set_style(null);
+            style = c.dep_delay >= this.warn_minutes
+                ? "color: #d05c5c; font-weight: bold;"
+                : "color: #d3a04a;";
         }
-
-        this.set_applet_label(text);
 
         // Im Tooltip steht an jeder Zeit der Bahnhof, zu dem sie gehoert --
         // sonst bleibt dieselbe Verwechslung wie vorher im Panel.
@@ -245,7 +263,9 @@ class DbPendler extends Applet.TextIconApplet {
             tip += "\nAnkunft aus der Abfahrtsverspätung gerechnet";
         }
         if (c.cancelled) tip += "\nFÄLLT AUS";
-        this.set_applet_tooltip(tip);
+        if (this.compact) tip = text + "\n\n" + tip;
+
+        this._applyPanel(text, style, tip);
     }
 
     _buildMenu() {

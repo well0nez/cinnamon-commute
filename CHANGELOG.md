@@ -3,6 +3,24 @@
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-02
+
+### Added
+
+- A compact form for the panel. A middle-click removes the text and leaves a
+  train icon, and a second middle-click brings the text back. The applet keeps
+  the choice, also after a restart. The width goes from 143 pixels to 28.
+
+  The icon still reports a delay, because it takes the colour that the text
+  would have. A departure that is 20 minutes away is not news at 14:00, but a
+  cancellation is news at any hour. The tooltip continues to give the full
+  departure, and the menu is unchanged.
+
+- A symbolic train icon in the applet. No icon theme on the test system has
+  one: Papirus offers only a coloured map marker, which looks foreign in a
+  panel. The icon ships with the applet and takes the colour of the panel
+  text.
+
 ## [1.0.2] - 2026-08-02
 
 ### Added

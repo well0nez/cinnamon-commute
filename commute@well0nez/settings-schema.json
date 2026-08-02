@@ -34,6 +34,12 @@
         "units": "Verbindungen",
         "description": "Verbindungen im Menü"
     },
+    "compact": {
+        "type": "checkbox",
+        "default": false,
+        "description": "Nur Symbol statt Text",
+        "tooltip": "Mittelklick auf das Applet schaltet ebenfalls um. Die Verspätung färbt dann das Symbol, der Tooltip zeigt weiterhin alles."
+    },
     "panel-mode": {
         "type": "combobox",
         "default": "dest",

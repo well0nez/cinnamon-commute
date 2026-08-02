@@ -15,6 +15,12 @@ the train. A delay of one minute or more appears after the time. Small delays
 are amber, and delays above your threshold are red. A cancelled train gets a
 warning sign.
 
+**A middle-click on the applet removes the text and leaves a train icon.** A
+second middle-click brings the text back. The applet keeps your choice, also
+after a restart. The compact form is 28 pixels wide instead of 143, and it
+still tells you when a train is late: the icon takes the colour that the text
+would have. Point at the icon to read the full departure in the tooltip.
+
 The menu shows the next connections in a table. Each row gives the scheduled
 departure, the real departure, the line, the scheduled arrival and the real
 arrival. A real time appears only when the train is late, and it is red. The
@@ -90,12 +96,17 @@ Right-click the applet and select *Configure*.
 | --- | --- |
 | Bahnhof A / Bahnhof B | The two stations. Write the name as it appears in the timetable, for example `Köln Hbf` or `Solingen-Ohligs`. |
 | Verbindungen im Menü | How many connections the menu shows. |
+| Nur Symbol statt Text | The compact form. A middle-click on the applet does the same. |
 | Panel-Text | The format of the panel text. Every format starts with `ab`, because the time is always a departure. |
 | Verspätung ab dieser Höhe rot | The threshold in minutes for the red colour. Below it a delay is amber. |
 | Abfrageintervall | The time between two requests. The lowest value is 60 seconds. |
 
 The menu entry *Richtung wechseln* swaps the two stations. The applet keeps the
 direction until you change it again.
+
+The applet answers three mouse buttons. The left button opens the menu, the
+middle button changes between the text and the icon, and the right button
+opens the Cinnamon context menu.
 
 The station name goes to the geocoder once. The applet then keeps the result,
 and later requests use the stored identifier.
